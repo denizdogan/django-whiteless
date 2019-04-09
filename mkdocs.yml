@@ -1,9 +1,11 @@
-site_name: django-whiteless documentation
-repo_url: https://github.com/denizdogan/whiteless/
-repo_name: GitHub
+site_name: django-whiteless
+site_url: https://django-whiteless.readthedocs.io/en/latest/
+repo_url: https://github.com/denizdogan/django-whiteless
 site_author: Deniz Dogan
-plugins:
-  - minify
 markdown_extensions:
-  - fenced_code
-  - markdown_include.include
+    - smarty
+    - fenced_code
+    - codehilite
+    - markdown_include.include
+extra_css: [codehilite.css]
+

@@ -33,6 +33,7 @@ setup(
             "mkdocs-minify-plugin == 0.1.0",
             "pipdeptree == 0.13.2",
             "pre-commit == 1.15.1",
+            "pygments == 2.3.1",
         ]
     },
 )
