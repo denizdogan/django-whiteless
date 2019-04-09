@@ -1,0 +1,9 @@
+site_name: django-whiteless documentation
+repo_url: https://github.com/denizdogan/whiteless/
+repo_name: GitHub
+site_author: Deniz Dogan
+plugins:
+  - minify
+markdown_extensions:
+  - fenced_code
+  - markdown_include.include
