@@ -3,7 +3,7 @@ name = "django-whiteless"
 version = "0.1.0"
 description = "Django template tags for dealing with pesky whitespaces"
 authors = ["Deniz Dogan <denizdogan@users.noreply.github.com>"]
-license = "Apache-2.0"
+license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^2.7 || ^3.5"
