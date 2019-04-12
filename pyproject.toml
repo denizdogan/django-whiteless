@@ -1,9 +1,40 @@
 [tool.poetry]
 name = "django-whiteless"
-version = "0.1.0"
+version = "0.1.2"
 description = "Django template tags for dealing with pesky whitespaces"
 authors = ["Deniz Dogan <denizdogan@users.noreply.github.com>"]
+readme = "README.md"
+homepage = "https://github.com/denizdogan/django-whiteless"
+repository = "https://github.com/denizdogan/django-whiteless.git"
+documentation = "https://django-whiteless.readthedocs.io/en/latest/"
+keywords = [
+    "django",
+    "whitespace",
+    "template",
+    "tag",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Django",
+    "Framework :: Django :: 1.11",
+    "Framework :: Django :: 2.0",
+    "Framework :: Django :: 2.1",
+    "Framework :: Django :: 2.2",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+]
 license = "MIT"
+packages = [
+    { include = "whiteless" },
+]
+include = [
+    "CHANGELOG.md",
+    "LICENSE",
+]
 
 [tool.poetry.dependencies]
 python = "^2.7.9 || ^3.5"
