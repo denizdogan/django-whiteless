@@ -2,7 +2,16 @@ import re
 
 from hypothesis import assume, example
 
-from tests.utils import *
+from tests.utils import (
+    given_double_whitespaces,
+    given_leading_double_whitespaces,
+    given_leading_trailing_whitespaces,
+    given_leading_whitespaces,
+    given_no_whitespace,
+    given_only_whitespaces,
+    given_some_whitespace,
+    given_trailing_whitespaces,
+)
 from whiteless.templatetags.whiteless import leading, remove_all, space, strip, trailing
 
 

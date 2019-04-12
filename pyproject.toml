@@ -15,6 +15,7 @@ Django = [
 [tool.poetry.dev-dependencies]
 black = {version = "^18.3-alpha.0", allows-prereleases = true, python = "^3.6"}
 flake8 = "^3.7"
+flake8-bugbear = { version = "^19.3", python = "^3.5"}
 flake8-isort = "^2.7"
 hypothesis = "^4.15"
 isort = "^4.3"
