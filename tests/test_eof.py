@@ -8,10 +8,12 @@ class TestEof(object):
     @given_only_whitespaces
     @example("\n\t\f")
     def test_trailing_whitespaces(self, s):
-        c = Context()
-        assert "" == Template("{% load whiteless %}{% eof %}" + s).render(c)
+        tmpl = Template("{% load whiteless %}{% eof %}" + s)
+        out = tmpl.render(Context())
+        assert out == ""
 
     @given_only_whitespaces
     def test_leading_whitespaces(self, s):
-        c = Context()
-        assert s == Template("{% load whiteless %}" + s + "{% eof %}").render(c)
+        tmpl = Template("{% load whiteless %}" + s + "{% eof %}")
+        out = tmpl.render(Context())
+        assert out == s

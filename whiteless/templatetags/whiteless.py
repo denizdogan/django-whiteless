@@ -4,6 +4,13 @@ from django import template
 from django.template import Node
 from django.template.defaulttags import CommentNode
 
+try:  # django >= 2.0
+    from django.template.base import TokenType
+
+    TOKEN_TEXT = TokenType.TEXT
+except ImportError:  # django <= 1.11
+    from django.template.base import TOKEN_TEXT
+
 register = template.Library()
 
 
@@ -98,7 +105,7 @@ def whiteless(parser, token):
     :return: WhitelessNode object
     :rtype: WhitelessNode
     """
-    _tag_name, *args = token.split_contents()
+    args = token.split_contents()[1:]
 
     # default is to remove all whitespaces
     # otherwise collect transformers
@@ -152,7 +159,7 @@ def eof(parser, _token):
     :rtype: EofNode
     """
     # remove the leading whitespaces of the immediately subsequent tokens
-    while len(parser.tokens) and parser.tokens[0].token_type.name == "TEXT":
+    while len(parser.tokens) and parser.tokens[0].token_type == TOKEN_TEXT:
         contents = parser.tokens[0].contents  # type: str
         stripped = contents.lstrip()
         if contents == stripped:
