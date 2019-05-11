@@ -21,6 +21,73 @@ INSTALLED_APPS = (
 )
 ```
 
-## Documentation
+## Usage
 
-- [Read The Docs](https://django-whiteless.readthedocs.io/en/latest/)
+The library consists of two template tags, `{% whiteless %}` and `{% eof %}`.
+This is how you use them.
+
+### Remove all whitespaces
+
+```djangotemplate
+{% whiteless %}
+    ...
+{% endwhiteless %}
+```
+
+### Remove leading whitespaces
+
+```djangotemplate
+{% whiteless leading %}
+    ...
+{% endwhiteless %}
+```
+
+### Remove trailing whitespaces
+
+```djangotemplate
+{% whiteless trailing %}
+    ...
+{% endwhiteless %}
+```
+
+### Remove leading and trailing whitespaces
+
+```djangotemplate
+{% whiteless leading trailing %}
+    ...
+{% endwhiteless %}
+```
+
+### Replace whitespaces with a single space
+
+```djangotemplate
+{% whiteless space %}
+    ...
+{% endwhiteless %}
+```
+
+Note that if there are leading or trailing whitespaces in the block, those will
+also be replaced by a single space. In order to remove leading and trailing
+whitespaces and replace all other whitespaces with a single space, use:
+
+```djangotemplate
+{% whiteless space leading trailing %}
+    ...
+{% endwhiteless %}
+```
+
+### Remove trailing whitespaces at end of file
+
+```djangotemplate
+Hello there!{% eof %}
+```
+
+This is useful if e.g. your project style guide requires all files to end with
+a newline but that causes issues with your template.
+
+Note that `{% eof %}` cannot be used inside other tags. It only removes
+whitespaces that immediately follow itself.
+
+## License
+
+[MIT](LICENSE)
