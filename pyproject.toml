@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-whiteless"
-version = "0.1.2"
+version = "0.1.3"
 description = "Django template tags for dealing with pesky whitespaces"
 authors = ["Deniz Dogan <denizdogan@users.noreply.github.com>"]
 readme = "README.md"
