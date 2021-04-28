@@ -113,7 +113,7 @@ def whiteless(parser, token):
         transformers = (remove_all,)
     else:
         transformers = (_TRANSFORMERS.get(t) for t in args)
-        transformers = filter(None, transformers)  # remove not found
+        transformers = list(filter(None, transformers))  # remove not found
 
     # parse up to endwhiteless and remove it
     nodelist = parser.parse(("endwhiteless",))

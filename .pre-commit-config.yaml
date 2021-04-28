@@ -1,12 +1,7 @@
-default_language_version:
-  python: python3.7
 default_stages: [commit]
 repos:
   - repo: https://github.com/ambv/black
-    rev: stable
+    rev: 21.4b1
     hooks:
       - id: black
-        name: black
-        language: system
-        entry: black
-        types: [python]
+        language_version: python3

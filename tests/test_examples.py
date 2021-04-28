@@ -18,5 +18,5 @@ class TestExamples(object):
                 template = "{% load whiteless %}" + f.read()
             with open(out_file) as f:
                 expected = f.read()
-            output = Template(template).render(Context())
+            output = Template(template).render(Context({"xs": [1, 2, 3]}))
             assert output == expected, in_file

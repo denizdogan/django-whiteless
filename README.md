@@ -4,6 +4,9 @@ Django template tags which deal with pesky whitespaces!
 
 [![CircleCI](https://circleci.com/gh/denizdogan/django-whiteless/tree/master.svg?style=svg)](https://circleci.com/gh/denizdogan/django-whiteless/tree/master)
 
+- Django 2.x and 3.x
+- Python 3.7, 3.8, 3.9
+
 ## Installation
 
 Install the latest version from PyPI:
@@ -87,6 +90,15 @@ a newline but that causes issues with your template.
 
 Note that `{% eof %}` cannot be used inside other tags. It only removes
 whitespaces that immediately follow itself.
+
+## Development
+
+```shell
+$ poetry shell
+$ poetry install
+$ pre-commit install  # install git hooks
+$ tox  # run tests
+```
 
 ## License
 
