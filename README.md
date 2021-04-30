@@ -69,15 +69,14 @@ This is how you use them.
 {% endwhiteless %}
 ```
 
-Note that if there are leading or trailing whitespaces in the block, those will
-also be replaced by a single space. In order to remove leading and trailing
-whitespaces and replace all other whitespaces with a single space, use:
+**Note 1:** If there are leading or trailing whitespaces in the block, those
+will also be replaced by a single space. In order to remove leading and
+trailing whitespaces and replace all other whitespaces with a single space,
+use: `{% whiteless space leading trailing %}`
 
-```djangotemplate
-{% whiteless space leading trailing %}
-    ...
-{% endwhiteless %}
-```
+**Note 2:** If used within a for-loop, the example will leave a space before
+and after each iteration. In other words, there will be two spaces between each
+part.
 
 ### Remove trailing whitespaces at end of file
 
