@@ -1,103 +1,95 @@
 # django-whiteless
 
-Django template tags which deal with pesky whitespaces!
+Django template tags for removing and normalizing whitespace.
 
-![Travis (.org)](https://img.shields.io/travis/denizdogan/django-whiteless)
-
-- Django 2.x and 3.x
-- Python 3.7, 3.8, 3.9
+[![Checks](https://github.com/denizdogan/django-whiteless/actions/workflows/check.yaml/badge.svg)](https://github.com/denizdogan/django-whiteless/actions/workflows/check.yaml)
 
 ## Installation
 
-Install the latest version from PyPI:
-
-```bash
-$ pip install django-whiteless
+```sh
+pip install django-whiteless
 ```
 
-Add `"whiteless"` to `INSTALLED_APPS`:
+Add `"whiteless"` to `INSTALLED_APPS`, then load the tags in your template:
 
-```python
-INSTALLED_APPS = (
-    # ...
-    "whiteless",
-)
+```djangotemplate
+{% load whiteless %}
 ```
 
 ## Usage
 
-The library consists of two template tags, `{% whiteless %}` and `{% eof %}`.
-This is how you use them.
+### `{% whiteless %}`
 
-### Remove all whitespaces
+Remove all whitespace from a rendered block:
 
 ```djangotemplate
 {% whiteless %}
-    ...
+    Hello, world!
 {% endwhiteless %}
 ```
 
-### Remove leading whitespaces
+Output: `Hello,world!`
+
+Pass options to change the behavior:
+
+| Option | Effect |
+| --- | --- |
+| `all` (default) | Remove all whitespace |
+| `space` | Collapse whitespace to single spaces |
+| `leading` | Remove whitespace at the start |
+| `trailing` | Remove whitespace at the end |
+| `strip` | Remove whitespace at both ends |
+
+Combine options in the order they should run. For example, collapse whitespace
+and trim the result:
 
 ```djangotemplate
-{% whiteless leading %}
-    ...
+{% whiteless space strip %}
+    Hello,     {{ name }}!
 {% endwhiteless %}
 ```
 
-### Remove trailing whitespaces
+With `name="Mark"`, the output is `Hello, Mark!`.
+
+Transformations include whitespace in variable values, not just indentation.
+This is not an HTML-aware minifier. Each block is processed independently, so
+spaces from adjacent loop iterations are not collapsed together.
+
+### `{% eof %}`
+
+Remove whitespace immediately following the tag, such as a final newline:
 
 ```djangotemplate
-{% whiteless trailing %}
-    ...
-{% endwhiteless %}
+Hello!{% eof %}
 ```
 
-### Remove leading and trailing whitespaces
+It does not reach past another tag or comment, or trim variable values.
 
-```djangotemplate
-{% whiteless leading trailing %}
-    ...
-{% endwhiteless %}
-```
+## Compatibility
 
-### Replace whitespaces with a single space
+Supports maintained Python and Django release lines:
 
-```djangotemplate
-{% whiteless space %}
-    ...
-{% endwhiteless %}
-```
+| Django | Python |
+| --- | --- |
+| 5.2 LTS | 3.11–3.14 |
+| 6.0 | 3.12–3.14 |
+| 6.1 | 3.12–3.15* |
 
-**Note 1:** If there are leading or trailing whitespaces in the block, those
-will also be replaced by a single space. In order to remove leading and
-trailing whitespaces and replace all other whitespaces with a single space,
-use: `{% whiteless space leading trailing %}`
-
-**Note 2:** If used within a for-loop, the example will leave a space before
-and after each iteration. In other words, there will be two spaces between each
-part.
-
-### Remove trailing whitespaces at end of file
-
-```djangotemplate
-Hello there!{% eof %}
-```
-
-This is useful if e.g. your project style guide requires all files to end with
-a newline but that causes issues with your template.
-
-Note that `{% eof %}` cannot be used inside other tags. It only removes
-whitespaces that immediately follow itself.
+Use the latest patch releases. *Python 3.15 passes this library's tests with
+Django 6.1.2; Django's official support starts with 6.1.3.*
 
 ## Development
 
-```shell
-$ poetry shell
-$ poetry install
-$ pre-commit install  # install git hooks
-$ tox  # run tests
+With [mise](https://mise.jdx.dev/) installed:
+
+```sh
+mise trust
+mise run setup
+mise run check
+mise run test:all
 ```
+
+Matrix tests use [tox](https://tox.wiki/) with uv and the committed lockfile.
 
 ## License
 
