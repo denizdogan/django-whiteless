@@ -60,7 +60,8 @@ run = ["rm -rf dist/current", "uv build --out-dir dist/current"]
 [tasks.publish]
 description = "Validate, build, and publish to PyPI with uv"
 depends = ["check", "test:all", "test:wheel"]
-run = "uv publish dist/current/*"
+raw = true
+run = "uv publish --trusted-publishing never dist/current/*"
 
 [tasks."test:wheel"]
 description = "Build and test the installed wheel outside the checkout"
