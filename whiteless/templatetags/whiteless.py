@@ -1,78 +1,47 @@
+from __future__ import annotations
+
 import re
+from collections.abc import Callable
 
 from django import template
-from django.template import Node
+from django.template import Context, Node
+from django.template.base import NodeList, Parser, Token, TokenType
 from django.template.defaulttags import CommentNode
-
-try:  # django >= 2.0
-    from django.template.base import TokenType
-
-    TOKEN_TEXT = TokenType.TEXT
-except ImportError:  # django <= 1.11
-    from django.template.base import TOKEN_TEXT
 
 register = template.Library()
 
 
-def leading(value):
-    """
-    Strip all leading whitespaces.
-    :param value: The value
-    :type value: str
-    :return: The value with all leading whitespaces removed
-    :rtype: str
-    """
+def leading(value: str) -> str:
+    """Remove leading whitespace."""
     return value.lstrip()
 
 
-def remove_all(value):
-    """
-    Remove all whitespaces from a string.
-    :param value: The value
-    :type value: str
-    :return: The value with all whitespaces removed
-    :rtype: str
-    """
+def remove_all(value: str) -> str:
+    """Remove all whitespace."""
     return re.sub(r"\s+", "", value)
 
 
-def space(value):
-    """
-    Replace all whitespaces by a single space.
-    :param value: The value
-    :type value: str
-    :return: The value with all whitespaces replaced by a single space
-    :rtype: str
-    """
+def space(value: str) -> str:
+    """Collapse whitespace to single spaces; return empty for whitespace-only input."""
     output = re.sub(r"\s+", " ", value)
     if output == " ":
         return ""
     return output
 
 
-def strip(value):
-    """
-    Strip all leading and trailing whitespaces.
-    :param value: The value
-    :type value: str
-    :return: The value with all leading and trailing whitespaces removed
-    :rtype: str
-    """
+def strip(value: str) -> str:
+    """Remove leading and trailing whitespace."""
     return value.strip()
 
 
-def trailing(value):
-    """
-    Strip all trailing whitespaces.
-    :param value: The value
-    :type value: str
-    :return: The value with all trailing whitespaces removed
-    :rtype: str
-    """
+def trailing(value: str) -> str:
+    """Remove trailing whitespace."""
     return value.rstrip()
 
 
-_TRANSFORMERS = {
+_Transformer = Callable[[str], str]
+
+_TRANSFORMERS: dict[str, _Transformer] = {
     "all": remove_all,
     "space": space,
     "strip": strip,
@@ -82,38 +51,25 @@ _TRANSFORMERS = {
 
 
 @register.tag
-def whiteless(parser, token):
-    """
-    Remove whitespaces in various ways depending on the arguments.
+def whiteless(parser: Parser, token: Token) -> WhitelessNode:
+    """Compile a block that transforms rendered whitespace.
 
-    ``all`` (default)
-        Removes all whitespaces in the block
-
-    ``space``
-        Replaces all whitespaces in the block with a single space
-
-    ``leading``
-        Removes all whitespaces immediately following ``{% whiteless %}``
-
-    ``trailing``
-        Removes all whitespaces immediately preceding ``{% endwhiteless %}``
-
-    :param parser: Template parser object
-    :type parser: django.template.base.Parser
-    :param token: Template token object
-    :type token: django.template.base.Token
-    :return: WhitelessNode object
-    :rtype: WhitelessNode
+    Options are applied in order:
+    - all: remove all whitespace (the default).
+    - space: collapse whitespace to single spaces.
+    - leading: remove whitespace at the start of the rendered block.
+    - trailing: remove whitespace at the end of the rendered block.
+    - strip: remove whitespace at both ends.
     """
     args = token.split_contents()[1:]
 
     # default is to remove all whitespaces
     # otherwise collect transformers
-    if not len(args):
+    transformers: tuple[_Transformer, ...]
+    if not args:
         transformers = (remove_all,)
     else:
-        transformers = (_TRANSFORMERS.get(t) for t in args)
-        transformers = list(filter(None, transformers))  # remove not found
+        transformers = tuple(_TRANSFORMERS[arg] for arg in args if arg in _TRANSFORMERS)
 
     # parse up to endwhiteless and remove it
     nodelist = parser.parse(("endwhiteless",))
@@ -122,25 +78,15 @@ def whiteless(parser, token):
 
 
 class WhitelessNode(Node):
-    def __init__(self, nodelist, transformers):
-        """
-        Constructor.
-        :param nodelist: List of nodes in the block
-        :type nodelist: django.template.base.NodeList
-        :param transformers: List of transformers to apply to the content
-        :type transformers: callable
-        """
+    def __init__(
+        self, nodelist: NodeList, transformers: tuple[_Transformer, ...]
+    ) -> None:
+        """Store the block and its ordered whitespace transformations."""
         self.nodelist = nodelist
         self.transformers = transformers
 
-    def render(self, context):
-        """
-        Render the node.
-        :param context: Template context
-        :type context: django.template.context.Context
-        :return: Output
-        :rtype: str
-        """
+    def render(self, context: Context) -> str:
+        """Render the block and apply its whitespace transformations."""
         value = self.nodelist.render(context)
         for transformer in self.transformers:
             value = transformer(value)
@@ -148,29 +94,16 @@ class WhitelessNode(Node):
 
 
 @register.tag
-def eof(parser, _token):
-    """
-    Remove the immediately subsequent newlines.
-    :param parser: Template parser
-    :type parser: django.template.base.Parser
-    :param _token: Current token
-    :type _token: django.template.base.Token
-    :return: EofNode object
-    :rtype: EofNode
-    """
-    # remove the leading whitespaces of the immediately subsequent tokens
-    while len(parser.tokens) and parser.tokens[0].token_type == TOKEN_TEXT:
-        contents = parser.tokens[0].contents  # type: str
-        stripped = contents.lstrip()
-        if contents == stripped:
-            break
-        parser.tokens[0].contents = stripped
+def eof(parser: Parser, _token: Token) -> EofNode:
+    """Remove leading whitespace from the immediately following text token."""
+    # remove leading whitespaces only from the immediately subsequent text token
+    if parser.tokens:
+        token = parser.next_token()
+        if token.token_type == TokenType.TEXT:
+            token.contents = token.contents.lstrip()
+        parser.prepend_token(token)
     return EofNode()
 
 
 class EofNode(CommentNode):
-    """
-    Equal to a comment in spirit.
-    """
-
-    pass
+    """Render nothing after the following text token has been trimmed."""
