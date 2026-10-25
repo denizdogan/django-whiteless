@@ -1,0 +1,81 @@
+min_version = "2026.10.19"
+
+[tool_config]
+locked = true
+
+[tools]
+python = ["3.14", "3.11", "3.12", "3.13", "3.15"]
+uv = "latest"
+
+[settings]
+lockfile = true
+lockfile_platforms = ["linux-x64", "macos-arm64", "macos-x64"]
+python.uv_venv_auto = "create|source"
+
+[env]
+UV_PYTHON = { value = "{{ tools.python[0].path }}", tools = true }
+UV_PYTHON_DOWNLOADS = "never"
+
+[tasks.setup]
+description = "Create or update .venv from uv.lock using mise's Python"
+alias = "sync"
+run = "uv sync --locked"
+
+[tasks.lint]
+description = "Check Python lint and formatting with Ruff defaults"
+depends = ["setup"]
+run = [
+    "uv run --no-sync ruff check .",
+    "uv run --no-sync ruff format --check .",
+]
+
+[tasks.format]
+description = "Fix lint issues and format Python files"
+depends = ["setup"]
+run = ["uv run --no-sync ruff check --fix .", "uv run --no-sync ruff format ."]
+
+[tasks.test]
+description = "Run tests with line and branch coverage"
+depends = ["setup"]
+run = "uv run --no-sync pytest --cov --cov-report=term-missing"
+
+[tasks."test:all"]
+description = "Run the Python/Django matrix with tox"
+depends = ["setup"]
+run = "uv run --no-sync tox -p auto"
+
+[tasks.typecheck]
+description = "Check types with ty defaults"
+depends = ["setup"]
+run = "uv run --no-sync ty check"
+
+[tasks.check]
+description = "Run Ruff, ty, and the default test suite"
+depends = ["lint", "typecheck", "test"]
+
+[tasks.build]
+description = "Build fresh wheel and source distributions with uv"
+run = ["rm -rf dist/current", "uv build --out-dir dist/current"]
+
+[tasks.publish]
+description = "Validate, build, and publish to PyPI with uv"
+depends = ["check", "test:all", "test:wheel"]
+run = "uv publish dist/current/*"
+
+[tasks."test:wheel"]
+description = "Build and test the installed wheel outside the checkout"
+depends = ["build"]
+run = [
+    "rm -rf dist/wheel-test && mkdir -p dist/wheel-test",
+    "cp -R tests pyproject.toml dist/wheel-test/",
+    "uv export --locked --no-emit-project --output-file dist/wheel-test/requirements.txt --quiet",
+    'uv run --isolated --no-project --directory dist/wheel-test --with-requirements requirements.txt --with "{{ config_root }}"/dist/current/*.whl python -m pytest --cov --cov-report=term-missing',
+]
+
+[tasks."tools:update"]
+description = "Refresh locked tools and synchronize .venv"
+run = ["mise lock --bump", "mise install python uv", "mise run setup"]
+
+[tasks."deps:update"]
+description = "Upgrade Python packages and refresh .venv"
+run = ["uv lock --upgrade", "uv sync --locked"]
