@@ -3,6 +3,7 @@
 Django template tags for removing and normalizing whitespace.
 
 [![Checks](https://github.com/denizdogan/django-whiteless/actions/workflows/check.yaml/badge.svg)](https://github.com/denizdogan/django-whiteless/actions/workflows/check.yaml)
+[![Coverage](https://codecov.io/gh/denizdogan/django-whiteless/graph/badge.svg)](https://app.codecov.io/github/denizdogan/django-whiteless)
 
 ## Installation
 
