@@ -1,22 +1,17 @@
-from glob import glob
-from os.path import dirname, join
+from pathlib import Path
 
+import pytest
 from django.template import Context, Template
 
-example_dir = join(dirname(__file__), "examples")
-example_input_fnames = glob(join(example_dir, "*.md"))
-example_inputs = (join(example_dir, fname) for fname in example_input_fnames)
-examples = (
-    (example, example.replace(".md", ".output")) for example in example_input_fnames
-)
+example_dir = Path(__file__).parent / "examples"
 
 
-class TestExamples(object):
-    def test_examples(self):
-        for in_file, out_file in examples:
-            with open(in_file) as f:
-                template = "{% load whiteless %}" + f.read()
-            with open(out_file) as f:
-                expected = f.read()
-            output = Template(template).render(Context({"xs": [1, 2, 3]}))
-            assert output == expected, in_file
+class TestExamples:
+    @pytest.mark.parametrize(
+        "in_file", sorted(example_dir.glob("*.md")), ids=lambda path: path.stem
+    )
+    def test_examples(self, in_file):
+        template = "{% load whiteless %}" + in_file.read_text(encoding="utf-8")
+        expected = in_file.with_suffix(".output").read_text(encoding="utf-8")
+        output = Template(template).render(Context({"xs": [1, 2, 3]}))
+        assert output == expected

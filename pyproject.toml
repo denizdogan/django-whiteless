@@ -1,62 +1,84 @@
-[tool.poetry]
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14"]
+build-backend = "uv_build"
+
+[project]
 name = "django-whiteless"
-version = "1.0.0"
+version = "2.0.0"
 description = "Django template tags for dealing with pesky whitespaces"
-authors = ["Deniz Dogan <denizdogan@users.noreply.github.com>"]
 readme = "README.md"
-homepage = "https://github.com/denizdogan/django-whiteless"
-repository = "https://github.com/denizdogan/django-whiteless.git"
-documentation = "https://github.com/denizdogan/django-whiteless"
-keywords = [
-    "django",
-    "whitespace",
-    "template",
-    "tag",
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Deniz Dogan", email = "denizdogan@users.noreply.github.com" },
 ]
+keywords = ["django", "whitespace", "template", "tag"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Framework :: Django",
-    "Framework :: Django :: 2.0",
-    "Framework :: Django :: 2.1",
-    "Framework :: Django :: 2.2",
-    "Framework :: Django :: 3.0",
-    "Framework :: Django :: 3.1",
-    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Typing :: Typed",
 ]
-license = "MIT"
-packages = [
-    { include = "whiteless" },
-]
-include = [
-    "CHANGELOG.md",
-    "LICENSE",
+dependencies = ["Django>=5.2,<6.2"]
+
+[project.urls]
+Homepage = "https://github.com/denizdogan/django-whiteless"
+Repository = "https://github.com/denizdogan/django-whiteless.git"
+Documentation = "https://github.com/denizdogan/django-whiteless#readme"
+Issues = "https://github.com/denizdogan/django-whiteless/issues"
+Changelog = "https://github.com/denizdogan/django-whiteless/blob/master/CHANGELOG.md"
+
+[dependency-groups]
+django52 = ["Django>=5.2,<5.3"]
+django60 = ["Django>=6.0,<6.1"]
+django61 = ["Django>=6.1,<6.2"]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-django>=4.14.0",
+    "ruff>=0.17.2",
+    "tox>=4.67.1",
+    "tox-uv-bare>=1.37.0",
+    "ty>=0.0.91",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.7"
-Django = "^2.0 || ^3.0"
+[tool.uv]
+conflicts = [
+    [
+        { group = "django52" },
+        { group = "django60" },
+        { group = "django61" },
+    ],
+]
 
-[tool.poetry.dev-dependencies]
-black = "~21.4b1"
-flake8 = "~3.9.1"
-flake8-bugbear = "~21.4.3"
-flake8-isort = "~4.0.0"
-hypothesis = "~6.10.1"
-isort = "~5.8.0"
-pipdeptree = "~2.0.0"
-pre-commit = "~2.12.1"
-pytest = "~6.2.3"
-pytest-cov = "~2.11.1"
-pytest-runner = "~5.3.0"
-tox = "~3.23.0"
-pytest-django = "~4.2.0"
-tox-poetry-installer = {extras = ["poetry"], version = "^0.7.0"}
+[tool.uv.dependency-groups]
+django60 = { requires-python = ">=3.12" }
+django61 = { requires-python = ">=3.12" }
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv.build-backend]
+module-name = "whiteless"
+module-root = ""
+source-include = ["tests/**", "CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+django_find_project = false
+DJANGO_SETTINGS_MODULE = "tests.settings"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["whiteless"]
+
+[tool.coverage.report]
+show_missing = true

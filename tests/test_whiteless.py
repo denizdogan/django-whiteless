@@ -1,192 +1,139 @@
-import re
+import pytest
+from django.template import Context, Template
 
-from hypothesis import assume, example
-
-from tests.utils import (
-    given_double_whitespaces,
-    given_leading_double_whitespaces,
-    given_leading_trailing_whitespaces,
-    given_leading_whitespaces,
-    given_no_whitespace,
-    given_only_whitespaces,
-    given_some_whitespace,
-    given_trailing_whitespaces,
-)
 from whiteless.templatetags.whiteless import leading, remove_all, space, strip, trailing
 
 
-class TestRemoveAll(object):
-    def test_empty_string(self):
-        output = remove_all("")
-        assert output == ""
-
-    @given_some_whitespace
-    @example("\n foo\tbar  \r  \tx\t")
-    def test_whitespaces(self, value):
-        output = remove_all(value)
-        assert not re.search(r"\s", output)
-        assert output == re.sub(r"\s+", "", value)
-
-    @given_no_whitespace
-    @example("foobar")
-    def test_no_whitespaces(self, value):
-        output = remove_all(value)
-        assert output == value
-
-    @given_only_whitespaces
-    @example(" \n\f\t")
-    def test_only_whitespaces(self, value):
-        output = remove_all(value)
-        assert output == ""
+@pytest.mark.parametrize("transform", [remove_all, space, strip, leading, trailing])
+@pytest.mark.parametrize(
+    "value", ["", "foobar", "café東京🙂", "\u200b", "\ufeff", "\u200bcafé\ufeff"]
+)
+def test_transformers_preserve_non_whitespace(transform, value):
+    assert transform(value) == value
 
 
-class TestSpace(object):
-    def test_empty_string(self):
-        output = space("")
-        assert output == "", output
-
-    @given_no_whitespace
-    @example("foobar")
-    def test_no_whitespaces(self, value):
-        output = space(value)
-        assert output == value, output
-
-    @given_only_whitespaces
-    @example(" \n\f\t")
-    def test_only_whitespaces(self, value):
-        output = space(value)
-        assert output == "", output
-
-    @given_double_whitespaces
-    @example("\n foo\tbar  \r  \tx\t")
-    def test_double_whitespaces(self, value):
-        output = space(value)
-        assert not re.search(r"\s\s", output)
-        assert not re.search(r"[^\S ]", output)
-
-    @given_leading_double_whitespaces
-    @example("\ffoo bar baz")
-    def test_leading_whitespaces(self, value):
-        assume(re.search(r"\S", value))
-        output = space(value)
-        assert output[0] == " "
-
-    @given_trailing_whitespaces
-    @example("foo bar baz\t")
-    def test_trailing_whitespaces(self, value):
-        assume(re.search(r"\S", value))
-        output = space(value)
-        assert output[-1] == " "
+@pytest.mark.parametrize("transform", [remove_all, space, strip, leading, trailing])
+def test_transformers_remove_whitespace_only(transform, whitespace):
+    assert transform(whitespace) == ""
 
 
-class TestStrip(object):
-    def test_empty_string(self):
-        output = strip("")
-        assert output == ""
-
-    @given_no_whitespace
-    @example("foobar")
-    def test_no_whitespaces(self, value):
-        output = strip(value)
-        assert output == value
-
-    @given_only_whitespaces
-    @example(" \n\f\t")
-    def test_only_whitespaces(self, value):
-        output = strip(value)
-        assert output == ""
-
-    @given_leading_whitespaces
-    @example("\n\tfoobar")
-    def test_leading_whitespaces(self, value):
-        output = strip(value)
-        assert not re.search(r"^\s", output)
-
-    @given_trailing_whitespaces
-    @example("foobar\t\n")
-    def test_trailing_whitespaces(self, value):
-        output = strip(value)
-        assert not re.search(r"\s$", output)
-
-    @given_leading_trailing_whitespaces
-    @example("\n\tfoobar\t\n")
-    def test_leading_trailing_whitespaces(self, value):
-        output = strip(value)
-        assert not re.search(r"^\s", output)
-        assert not re.search(r"\s$", output)
+def test_transformers_wrapped_content(whitespace):
+    value = whitespace + "café" + whitespace + "東京" + whitespace
+    assert remove_all(value) == "café東京"
+    assert space(value) == " café 東京 "
+    assert strip(value) == "café" + whitespace + "東京"
+    assert leading(value) == "café" + whitespace + "東京" + whitespace
+    assert trailing(value) == whitespace + "café" + whitespace + "東京"
 
 
-class TestLeading(object):
-    def test_empty_string(self):
-        output = leading("")
-        assert output == ""
-
-    @given_no_whitespace
-    @example("foobar")
-    def test_no_whitespaces(self, value):
-        output = leading(value)
-        assert output == value
-
-    @given_only_whitespaces
-    @example(" \n\f\t")
-    def test_only_whitespaces(self, value):
-        output = leading(value)
-        assert output == ""
-
-    @given_leading_whitespaces
-    @example("\n\tfoobar")
-    def test_leading_whitespaces(self, value):
-        output = leading(value)
-        assert not re.search(r"^\s", output)
-
-    @given_trailing_whitespaces
-    @example("foobar\t\n")
-    def test_trailing_whitespaces(self, value):
-        output = leading(value)
-        assert not re.search(r"^\s", output)
-        assert re.search(r"\s$", output)
-
-    @given_leading_trailing_whitespaces
-    @example("\n\tfoobar\t\n")
-    def test_leading_trailing_whitespaces(self, value):
-        output = leading(value)
-        assert not re.search(r"^\s", output)
-        assert re.search(r"\s$", output)
+def test_transformers_internal_whitespace(whitespace):
+    value = "a" + whitespace + "b"
+    assert remove_all(value) == "ab"
+    assert space(value) == "a b"
+    assert strip(value) == value
+    assert leading(value) == value
+    assert trailing(value) == value
 
 
-class TestTrailing(object):
-    def test_empty_string(self):
-        output = trailing("")
-        assert output == ""
+@pytest.mark.parametrize(
+    ("value", "removed", "spaced", "stripped", "led", "trailed"),
+    [
+        ("\n\tfoo", "foo", " foo", "foo", "foo", "\n\tfoo"),
+        ("foo\t\n", "foo", "foo ", "foo", "foo\t\n", "foo"),
+        (
+            " \u200b\t\ufeff\n",
+            "\u200b\ufeff",
+            " \u200b \ufeff ",
+            "\u200b\t\ufeff",
+            "\u200b\t\ufeff\n",
+            " \u200b\t\ufeff",
+        ),
+    ],
+)
+def test_transformers_edges(value, removed, spaced, stripped, led, trailed):
+    assert remove_all(value) == removed
+    assert space(value) == spaced
+    assert strip(value) == stripped
+    assert leading(value) == led
+    assert trailing(value) == trailed
 
-    @given_no_whitespace
-    @example("foobar")
-    def test_no_whitespaces(self, value):
-        output = trailing(value)
-        assert output == value
 
-    @given_only_whitespaces
-    @example(" \n\f\t")
-    def test_only_whitespaces(self, value):
-        output = trailing(value)
-        assert output == ""
+class TestWhiteless:
+    @pytest.mark.parametrize(
+        ("options", "expected"),
+        [
+            ("", "ab"),
+            ("all", "ab"),
+            ("space", " a b "),
+            ("strip", "a \t b"),
+            ("leading", "a \t b \n"),
+            ("trailing", "\n a \t b"),
+            ("space strip", "a b"),
+            ("leading trailing space", "a b"),
+        ],
+    )
+    def test_options(self, options, expected):
+        tmpl = Template(
+            "{% load whiteless %}{% whiteless " + options + " %}"
+            "\n a \t b \n{% endwhiteless %}"
+        )
+        assert tmpl.render(Context()) == expected
 
-    @given_leading_whitespaces
-    @example("\n\tfoobar")
-    def test_leading_whitespaces(self, value):
-        output = trailing(value)
-        assert not re.search(r"\s$", output)
-        assert re.search(r"^\s", output)
+    @pytest.mark.parametrize(
+        ("options", "expected"),
+        [
+            ("unknown", "\n a \t b \n"),
+            ("strip unknown", "a \t b"),
+            ("unknown all", "ab"),
+            ('"strip"', "\n a \t b \n"),
+            ("strip=True", "\n a \t b \n"),
+            ("123", "\n a \t b \n"),
+            ("space unknown strip", "a b"),
+        ],
+    )
+    def test_unknown_options_are_ignored(self, options, expected):
+        tmpl = Template(
+            "{% load whiteless %}{% whiteless " + options + " %}"
+            "\n a \t b \n{% endwhiteless %}"
+        )
+        for _ in range(2):
+            assert tmpl.render(Context()) == expected
 
-    @given_trailing_whitespaces
-    @example("foobar\t\n")
-    def test_trailing_whitespaces(self, value):
-        output = trailing(value)
-        assert not re.search(r"\s$", output)
+    def test_transformers_preserve_order_and_are_reusable(self):
+        tmpl = Template(
+            "{% load whiteless %}{% whiteless space leading trailing space %}"
+            "{{ value }}{% endwhiteless %}"
+        )
+        assert tmpl.nodelist[-1].transformers == (space, leading, trailing, space)
+        for value, expected in [
+            ("  first \n value  ", "first value"),
+            ("\t second   value \n", "second value"),
+        ]:
+            assert tmpl.render(Context({"value": value})) == expected
 
-    @given_leading_trailing_whitespaces
-    @example("\n\tfoobar\t\n")
-    def test_leading_trailing_whitespaces(self, value):
-        output = trailing(value)
-        assert not re.search(r"\s$", output)
-        assert re.search(r"^\s", output)
+    def test_transformers_are_reused_in_loops(self):
+        tmpl = Template(
+            "{% load whiteless %}{% for value in values %}"
+            "{% whiteless space strip %}{{ value }}{% endwhiteless %}"
+            "{% endfor %}"
+        )
+        assert tmpl.render(Context({"values": [" a  b ", " c  d "]})) == "a bc d"
+
+    def test_nested_blocks(self):
+        tmpl = Template(
+            "{% load whiteless %}{% whiteless space %}\n outer "
+            "{% whiteless all %} inner words {% endwhiteless %} end \n"
+            "{% endwhiteless %}"
+        )
+        assert tmpl.render(Context()) == " outer innerwords end "
+
+    @pytest.mark.parametrize(
+        ("autoescape", "expected"),
+        [("on", "&lt;b&gt;x&lt;/b&gt;"), ("off", "<b>x</b>")],
+    )
+    def test_autoescape(self, autoescape, expected):
+        tmpl = Template(
+            "{% load whiteless %}{% autoescape " + autoescape + " %}"
+            "{% whiteless %}{{ value }}{% endwhiteless %}{% endautoescape %}"
+        )
+        assert tmpl.render(Context({"value": "<b> x </b>"})) == expected
